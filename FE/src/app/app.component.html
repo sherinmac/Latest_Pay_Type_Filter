@@ -1,0 +1,25 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div style="text-align:center">
+  <h2>Please choose the file type </h2>
+  <button (click)="loadFileTypes()" class="btn btn-primary">Choose</button>
+  <div *ngIf="showflag">
+    <form #projectForm="ngForm">
+
+      <ul class="list-group">
+        <li>
+          <label>
+            <input type="checkbox" name="vehicle1" value="Bike" (click)="checkAll($event)">Check all
+          </label>
+        </li>
+        <li *ngFor="let item of items; let i = index">
+          <label *ngIf="item.type!='head' && item.type!='filename'">
+            <input type="checkbox" name="fileType" [checked]="item.selected" (click)="isChecked($event, item)"
+              value="{{item.filename}}"> {{item.filename}}
+          </label>
+        </li>
+      </ul>
+      <button class="btn btn-danger"   type="reset">Reset</button>
+      <button class="btn btn-success" [disabled]="!projectForm.form.valid" (click)="writeFileTypes()">Save</button>
+    </form>
+  </div>
+</div>
