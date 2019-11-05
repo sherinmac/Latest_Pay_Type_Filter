@@ -12,7 +12,7 @@
           </label>
         </li>
         <li *ngFor="let item of items; let i = index">
-          <label *ngIf="item.type!='head' && item.type!='filename'">
+          <label *ngIf="item.type!='head' && item.type!='fileName'  && item.type!='directoryName' ">
             <input type="checkbox" name="fileType" [checked]="item.selected" (click)="isChecked($event, item)"
               value="{{item.filename}}"> {{item.filename}}
           </label>

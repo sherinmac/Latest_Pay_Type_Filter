@@ -30,11 +30,14 @@ export class AppComponent {
         alert('Load file types');
 
 
-        const payload = { filepath: "/home/sherin_ag/project_express/zip_file.zip" };
+        // const payload = { filepath: "/home/sherin_ag/project_express/customer-pay-type.zip" };
+        // const payload = { filepath: "/home/sherin_ag/project_express/PROC-LHMAM-NissanCorona-CA-INITIAL-3PA57883-20191023020002.zip" };
+        // const payload = { filepath: "/home/sherin_ag/project_express/PROC-LHMAM-NissanCorona-CA-INITIAL-3PA57883-20191023020002.zip" };
+        const payload = { filepath: "/home/sherin_ag/project_express/PROC-LHMAM-NissanCorona-CA-INITIAL-3PA57883.zip" };
+        
 
-
-        // let url = `http://localhost:8081/filesTypes`;
-        let url = `http://localhost:3000/payTypes`;
+         // let url = `http://localhost:8081/filesTypes`;
+         let url = `http://localhost:3000/payTypes`;
 
         this.http.post(url, payload).subscribe(res => {
             this.items = JSON.parse(res['_body']);
@@ -110,40 +113,5 @@ export class AppComponent {
         }
 
     }
-
-    generatePdf() {
-
-        var arr = [{ prjId: "", prj: "", Type: "#1 Cochran", Date: "", Num: "" },
-        { prjId: 230482046, prj: "#1 Cochran", Type: "Invoice", Date: "07-12-2019", Num: "T5917" },
-        { prjId: 230482182, prj: "#1 Cochran", Type: "Invoice", Date: "07-12-2019", Num: "T5919" },
-        { prjId: 210639333, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4181" },
-        { prjId: 210640692, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4256" },
-        { prjId: 210641170, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4300" },
-        { prjId: 210641290, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4257" },
-        { prjId: 210640465, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4255" },
-        { prjId: 210641051, prj: "#1 Cochran", Type: "Invoice", Date: "07-15-2019", Num: "T4298" },
-        { prjId: 230482210, prj: "#1 Cochran", Type: "Invoice", Date: "07-31-2019", Num: "T5918" },
-        { prjId: 230482075, prj: "#1 Cochran", Type: "Invoice", Date: "07-31-2019", Num: "T5916" },
-        { prjId: "", prj: "", Type: "Total     #1 Cochran", Date: "", Num: "" },
-        { prjId: "", prj: "", Type: "Total", Date: "", Num: "" }];
-
-        console.log(arr);
-        var result = [['project_id', 'type', 'num']].concat(arr.map(({ prjId, Type, Num }) => [(prjId) ? prjId : 'Nil', (Type) ? Type : 'Nil', (Num) ? Num : 'Nil']));
-        result.splice(-2, 2);
-        console.log(result);
-
-        const aging_data = {
-            content: [
-                {
-                    style: 'tableExample',
-                    table: {
-                        body: result
-                    }
-                }]
-        }
-        pdfMake.createPdf(aging_data).download();
-
-    }
-
 
 }

@@ -25,14 +25,22 @@ app.use(bodyParser.json());
 
 var path = require('path');
 var fs = require("fs");
+
+const csv = require('csv-parser');
 const unzipper = require("unzipper");
-const filetempPath = '/home/sherin_ag/project_express/tmp_unzip_file';
-const fileName = 'paytype.csv';
+const csvWriter = require('csv-write-stream')
+const writer = csvWriter();
+
+// _ = require('underscore');
+
+
+
+var filetempPath = '/home/sherin_ag/project_express/tmp_unzip_file/';
+const fileName = 'customer-pay-types.csv';
 const writefileDirectory = '/home/sherin_ag/project_express/';
 
 
 var unzipFile = (filePath) => {
-
     return new Promise((resolve, reject) => {
         try {
             fs.createReadStream(filePath).pipe(unzipper.Extract({ path: filetempPath }))
@@ -52,24 +60,51 @@ const writeJson = (processFilePath) => {
 
     return new Promise((resolve, reject) => {
         try {
-            // console.log('HI');
-            // console.log(processFilePath);
-            let res = [];
-            var LineByLineReader = require('line-by-line'),
-                lr = new LineByLineReader(processFilePath, { encoding: 'utf8', skipEmptyLines: false });
+            // // console.log('HI');
+            // // console.log(processFilePath);
+            // let res = [];
+            // var LineByLineReader = require('line-by-line'),
+            //     lr = new LineByLineReader(processFilePath, { encoding: 'utf8', skipEmptyLines: false });
 
-            lr.on('error', function (err) {
-                reject(err);
-            });
+            // lr.on('error', function (err) {
+            //     reject(err);
+            // });
 
-            lr.on('line', function (line) {
-                console.log(line);
-                res.push({ filename: line, selected: false, type: "content" });
-            });
+            // lr.on('line', function (line) {
+            //     console.log(`${line[2]}:${line}`);
+            //     res.push({ filename: line, selected: false, type: "content" });
+            // });
 
-            lr.on('end', function () {
-                resolve(res);
-            });
+            // lr.on('end', function () {
+            //     resolve(res);
+            // });
+
+            let result = [];
+            var res = [];
+            fs.createReadStream(processFilePath)
+                .pipe(csv())
+                .on('data', (data) => {
+                    let tmp_pay_type = data['Pay Type'].split(",");
+                    for (let i = 0; i < tmp_pay_type.length; i++) {
+                        result.push({ filename: tmp_pay_type[i].trim(), selected: false, type: "content" });
+                    }
+
+                })
+                .on('end', () => {
+                    // console.log(results);
+                    // [
+                    //   { NAME: 'Daffy Duck', AGE: '24' },
+                    //   { NAME: 'Bugs Bunny', AGE: '22' }
+                    // ]
+                    res = _unique(result, 'filename');
+                    console.log(res);
+                    resolve(res);
+                    // console.log(res);
+                });
+
+
+
+
         }
         catch (err) {
             reject(err);
@@ -77,6 +112,11 @@ const writeJson = (processFilePath) => {
         }
     });
 
+}
+
+
+function _unique(arr, key) {
+    return [...new Map(arr.map(item => [item[key], item])).values()]
 }
 
 function clearDirectory(directory) {
@@ -91,6 +131,22 @@ function clearDirectory(directory) {
     console.log('Directory cleared');
 }
 
+
+
+function removeDirForce(dirPath) {
+    try { var files = fs.readdirSync(dirPath); }
+      catch(e) { return; }
+      if (files.length > 0)
+        for (var i = 0; i < files.length; i++) {
+          var filePath = dirPath + '/' + files[i];
+          if (fs.statSync(filePath).isFile())
+            fs.unlinkSync(filePath);
+          else
+          removeDirForce(filePath);
+        }
+      fs.rmdirSync(dirPath);
+      console.log('Directory cleared');
+}
 
 
 app.get('/', function (req, res) {
@@ -136,28 +192,38 @@ app.post('/filesTypes', function (req, res) {
     // process.exit(0);
     // var filePath = '/home/sherin_ag/project_workshop/start.zip';
     if (fs.existsSync(filePath)) {
+        console.log(filePath);
         (async () => {
             await unzipFile(filePath);
             console.log("Reading  file started");
-            var processFilePath = filetempPath + '/' + tmpDirectory + '/' + fileName;
-            var clearDirectoryPath = filetempPath + '/' + tmpDirectory;
+            var processFilePath = filetempPath + tmpDirectory + '/processing-result/' + fileName;
+
+            // console.log('processFilePath:'+processFilePath);
+            // process.exit();
+            var clearDirectoryPath = filetempPath + tmpDirectory;
             await writeJson(processFilePath).then(result => {
                 // fs.unlinkSync(filetempPath+'/'+tmpDirectory);
                 //fs.rmdirSync(filetempPath+'/'+tmpDirectory);
-                clearDirectory(clearDirectoryPath);
+                removeDirForce(clearDirectoryPath);
+                // process.exit();
                 //result.shift();
                 result[0].type = 'head';
                 result.push({ filename: tmpDirectory, selected: false, type: "filename" });
                 arr1 = result;
                 //console.log(result);
                 let checkExistDirectory = writefileDirectory + tmpDirectory + '.csv';
+
                 if (fs.existsSync(checkExistDirectory)) {
                     console.log('File already exist');
                     console.log(checkExistDirectory);
+                    // process.exit();
                     (async () => {
                         // console.log('Hi');
                         await writeJson(checkExistDirectory).then(result => {
+
+                            console.log('************************************************');
                             console.log(result);
+                            console.log('************************************************');
                             arr2 = result;
                             arr1.forEach((e1) => arr2.forEach((e2) => {
                                 if (e1.filename === e2.filename) {
@@ -199,21 +265,35 @@ app.post('/writefilesTypes', function (req, res) {
     var jsonData = req.body;
     var writeString = '';
     var writeFileName;
-    //console.log(jsonData);
+
+
+
+
+
     jsonData.forEach(function (data) {
 
-        if ((data.selected == true || data.type == 'head') && data.type != 'filename') {
-            console.log(data.filename);
-            writeString += data.filename + '\n';
-        }
+        // if ((data.selected == true || data.type == 'head') && data.type != 'filename') {
+        //     console.log(data.filename);
+        //     writeString += data.filename + '\n';
+        // }
         if (data.type == 'filename') {
             writeFileName = data.filename + '.csv';
         }
     });
     try {
-        fs.writeFileSync(writefileDirectory + writeFileName, writeString, { mode: 0o755 });
+        //fs.writeFileSync(writefileDirectory + writeFileName, writeString, { mode: 0o755 });
+        let fl_name = writeFileName.replace('PROC-','');
+        var writer = csvWriter({ headers: ["Type", "Pay Type"] })
+        writer.pipe(fs.createWriteStream(writefileDirectory + fl_name))
+        jsonData.forEach(function (data) {
+            if ((data.selected == true || data.type == 'head') && data.type != 'filename') {
+                writer.write(['world', data.filename]);
+            }
+        });
+        writer.end();
         console.log("Finished");
         res.end("Writing finished");
+
     } catch (err) {
         // An error occurred
         console.error(err);
